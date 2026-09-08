@@ -1,1095 +1,983 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>SkillBridge — Internal Expertise & Talent Matching</title>
-
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4"></script>
-
-  <style>
-    :root {
-      --bg: #f5f7fb;
-      --card: #ffffff;
-      --text: #182230;
-      --muted: #687386;
-      --primary: #4f46e5;
-      --primary-light: #eef2ff;
-      --border: #e6e9f0;
-      --green: #16845b;
-      --amber: #b7791f;
-      --red: #c2413b;
-      --dark: #171b2d;
-      --dark2: #282e49;
-      --shadow: 0 8px 28px rgba(25, 35, 55, 0.07);
-      --radius: 18px;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family:
-        Inter,
-        ui-sans-serif,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    button,
-    input,
-    textarea,
-    select {
-      font: inherit;
-    }
-
-    /* =========================
-       LAYOUT
-    ========================= */
-
-    .app {
-      display: flex;
-      min-height: 100vh;
-    }
-
-    aside {
-      width: 245px;
-      background: var(--dark);
-      color: white;
-      padding: 24px 16px;
-      position: fixed;
-      inset: 0 auto 0 0;
-      z-index: 20;
-    }
-
-    .brand {
-      display: flex;
-      gap: 11px;
-      align-items: center;
-      padding: 4px 10px 28px;
-    }
-
-    .logo {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #818cf8, #4f46e5);
-      display: grid;
-      place-items: center;
-      font-weight: 800;
-    }
-
-    .brand strong {
-      display: block;
-      font-size: 17px;
-    }
-
-    .brand span {
-      font-size: 11px;
-      color: #aeb5ca;
-    }
-
-    nav button {
-      width: 100%;
-      border: 0;
-      background: transparent;
-      color: #c8cde0;
-      text-align: left;
-      padding: 12px 13px;
-      border-radius: 11px;
-      margin: 3px 0;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    nav button:hover,
-    nav button.active {
-      background: var(--dark2);
-      color: #fff;
-    }
-
-    .side-note {
-      position: absolute;
-      bottom: 22px;
-      left: 18px;
-      right: 18px;
-      background: #222842;
-      border: 1px solid #333a59;
-      border-radius: 14px;
-      padding: 13px;
-      font-size: 11px;
-      color: #bfc5d7;
-      line-height: 1.5;
-    }
-
-    main {
-      margin-left: 245px;
-      width: calc(100% - 245px);
-      padding: 30px;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 26px;
-    }
-
-    h1 {
-      font-size: 28px;
-      margin: 0 0 5px;
-    }
-
-    .subtitle {
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .badge {
-      padding: 7px 10px;
-      border-radius: 999px;
-      background: var(--primary-light);
-      color: #4338ca;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .page {
-      display: none;
-    }
-
-    .page.active {
-      display: block;
-    }
-
-    /* =========================
-       DASHBOARD
-    ========================= */
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-
-    .stat,
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-    }
-
-    .stat {
-      padding: 20px;
-    }
-
-    .stat .num {
-      font-size: 28px;
-      font-weight: 800;
-      margin-top: 8px;
-    }
-
-    .stat small {
-      color: var(--muted);
-    }
-
-    .grid2 {
-      display: grid;
-      grid-template-columns: 1.3fr 0.7fr;
-      gap: 18px;
-    }
-
-    .card {
-      padding: 20px;
-    }
-
-    .card h2 {
-      font-size: 17px;
-      margin: 0 0 15px;
-    }
-
-    .muted {
-      color: var(--muted);
-    }
-
-    /* =========================
-       INPUTS
-    ========================= */
-
-    .searchbox {
-      display: flex;
-      gap: 10px;
-    }
-
-    .searchbox input,
-    .searchbox textarea,
-    .searchbox select,
-    input,
-    textarea,
-    select {
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px;
-      background: #fbfcfe;
-      outline: none;
-    }
-
-    textarea {
-      resize: vertical;
-    }
-
-    input:focus,
-    textarea:focus,
-    select:focus {
-      border-color: #a5b4fc;
-    }
-
-    .btn {
-      border: 0;
-      border-radius: 11px;
-      padding: 11px 16px;
-      background: var(--primary);
-      color: white;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .btn:hover {
-      opacity: 0.92;
-    }
-
-    .btn.secondary {
-      background: var(--primary-light);
-      color: #4338ca;
-    }
-
-    .btn.light {
-      background: #f3f4f6;
-      color: #374151;
-    }
-
-    /* =========================
-       TABLE
-    ========================= */
-
-    .tablewrap {
-      overflow: auto;
-    }
-
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .table th,
-    .table td {
-      padding: 12px 10px;
-      border-bottom: 1px solid var(--border);
-      text-align: left;
-      font-size: 13px;
-      vertical-align: top;
-    }
-
-    .table th {
-      color: var(--muted);
-      font-size: 11px;
-      text-transform: uppercase;
-    }
-
-    /* =========================
-       BADGES
-    ========================= */
-
-    .pill {
-      display: inline-block;
-      padding: 5px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .available {
-      background: #eaf8f1;
-      color: var(--green);
-    }
-
-    .partial {
-      background: #fff6df;
-      color: var(--amber);
-    }
-
-    .unavailable {
-      background: #fdeceb;
-      color: var(--red);
-    }
-
-    .skill {
-      display: inline-block;
-      background: #f1f3f9;
-      color: #475467;
-      border-radius: 8px;
-      padding: 5px 8px;
-      margin: 2px;
-      font-size: 11px;
-    }
-
-    /* =========================
-       MATCH RESULTS
-    ========================= */
-
-    .result {
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px;
-      margin-top: 12px;
-    }
-
-    .resulthead {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .score {
-      font-weight: 800;
-      color: #4338ca;
-      white-space: nowrap;
-    }
-
-    .reason {
-      font-size: 13px;
-      line-height: 1.55;
-      margin-top: 9px;
-    }
-
-    .chips {
-      margin-top: 9px;
-    }
-
-    .progress {
-      height: 7px;
-      background: #edf0f5;
-      border-radius: 99px;
-      overflow: hidden;
-      margin-top: 7px;
-    }
-
-    .progress i {
-      display: block;
-      height: 100%;
-      background: linear-gradient(
-        90deg,
-        #6366f1,
-        #8b5cf6
-      );
-    }
-
-    /* =========================
-       DIRECTORY
-    ========================= */
-
-    .directory {
-      margin-top: 18px;
-    }
-
-    .filters {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-
-    /* =========================
-       PROFILE
-    ========================= */
-
-    .profile {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .profile div {
-      padding: 14px;
-      background: #fafbfc;
-      border-radius: 10px;
-    }
-
-    .profile strong {
-      font-size: 14px;
-    }
-
-    /* =========================
-       EMPTY
-    ========================= */
-
-    .empty {
-      padding: 28px;
-      text-align: center;
-      color: var(--muted);
-    }
-
-    /* =========================
-       TOAST
-    ========================= */
-
-    .toast {
-      position: fixed;
-      right: 22px;
-      bottom: 22px;
-      background: #202638;
-      color: white;
-      padding: 12px 15px;
-      border-radius: 10px;
-      display: none;
-      z-index: 100;
-    }
-
-    /* =========================
-       MOBILE
-    ========================= */
-
-    @media (max-width: 900px) {
-
-      aside {
-        width: 76px;
-      }
-
-      .brand div:not(.logo),
-      .side-note,
-      nav button span {
-        display: none;
-      }
-
-      main {
-        margin-left: 76px;
-        width: calc(100% - 76px);
-        padding: 20px;
-      }
-
-      .stats {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .grid2 {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 600px) {
-
-      .stats {
-        grid-template-columns: 1fr;
-      }
-
-      .filters {
-        grid-template-columns: 1fr;
-      }
-
-      .profile {
-        grid-template-columns: 1fr;
-      }
-
-      .searchbox {
-        flex-direction: column;
-      }
-
-      .topbar {
-        align-items: flex-start;
-        gap: 10px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SkillBridge | Internal Expertise & Talent Matching</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4"></script>
+
+<style>
+:root{
+  --bg:#f6f8fb;
+  --card:#ffffff;
+  --text:#172033;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+  --primary:#3157d5;
+  --primary-light:#eef2ff;
+  --success:#16845b;
+  --success-light:#eaf8f1;
+  --warning:#b7791f;
+  --warning-light:#fff7df;
+  --danger:#c24141;
+  --danger-light:#fff0f0;
+  --shadow:0 8px 30px rgba(31,41,55,.07);
+  --radius:16px;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+button,input,select,textarea{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+.app{
+  display:flex;
+  min-height:100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+  width:250px;
+  background:#111827;
+  color:white;
+  padding:24px 16px;
+  position:fixed;
+  top:0;
+  bottom:0;
+  left:0;
+  z-index:20;
+}
+
+.logo{
+  padding:4px 12px 28px;
+}
+
+.logo h1{
+  margin:0;
+  font-size:24px;
+  letter-spacing:-.5px;
+}
+
+.logo p{
+  margin:6px 0 0;
+  color:#aeb8c8;
+  font-size:12px;
+}
+
+.nav{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+
+.nav button{
+  border:0;
+  background:transparent;
+  color:#c9d0dc;
+  text-align:left;
+  padding:12px 14px;
+  border-radius:10px;
+  transition:.2s;
+}
+
+.nav button:hover,
+.nav button.active{
+  background:#26334a;
+  color:white;
+}
+
+.sidebar-footer{
+  position:absolute;
+  bottom:22px;
+  left:20px;
+  right:20px;
+  color:#8e9aac;
+  font-size:11px;
+  line-height:1.5;
+}
+
+/* MAIN */
+
+.main{
+  margin-left:250px;
+  width:calc(100% - 250px);
+  padding:30px;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:26px;
+}
+
+.topbar h2{
+  margin:0;
+  font-size:28px;
+}
+
+.topbar p{
+  color:var(--muted);
+  margin:7px 0 0;
+}
+
+.status{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:12px;
+  background:white;
+  border:1px solid var(--border);
+  padding:8px 12px;
+  border-radius:999px;
+}
+
+.dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#22c55e;
+}
+
+/* PAGES */
+
+.page{
+  display:none;
+}
+
+.page.active{
+  display:block;
+}
+
+/* CARDS */
+
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:22px;
+  margin-bottom:20px;
+}
+
+.card h3{
+  margin:0 0 8px;
+  font-size:18px;
+}
+
+.card-subtitle{
+  color:var(--muted);
+  font-size:13px;
+  margin-bottom:18px;
+}
+
+/* STATS */
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  margin-bottom:20px;
+}
+
+.stat{
+  background:white;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px;
+  box-shadow:var(--shadow);
+}
+
+.stat-label{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:8px;
+}
+
+.stat-value{
+  font-size:30px;
+  font-weight:700;
+}
+
+.stat-note{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:6px;
+}
+
+/* PROJECT */
+
+.project-header{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  align-items:flex-start;
+}
+
+.project-code{
+  display:inline-block;
+  background:var(--primary-light);
+  color:var(--primary);
+  padding:5px 9px;
+  border-radius:7px;
+  font-size:11px;
+  font-weight:700;
+  margin-bottom:9px;
+}
+
+.project-title{
+  font-size:22px;
+  font-weight:700;
+  margin-bottom:8px;
+}
+
+.project-description{
+  color:var(--muted);
+  line-height:1.6;
+  font-size:13px;
+}
+
+.requirements{
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px;
+  margin-top:18px;
+}
+
+.requirement{
+  border:1px solid #dbe2f0;
+  background:#f8faff;
+  border-radius:9px;
+  padding:8px 11px;
+  font-size:12px;
+}
+
+.requirement strong{
+  color:var(--text);
+}
+
+.level{
+  color:var(--primary);
+  font-weight:600;
+}
+
+/* MATCHING */
+
+textarea{
+  width:100%;
+  min-height:110px;
+  resize:vertical;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:13px;
+  outline:none;
+}
+
+textarea:focus,
+input:focus,
+select:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(49,87,213,.1);
+}
+
+.primary-btn{
+  background:var(--primary);
+  color:white;
+  border:0;
+  border-radius:10px;
+  padding:11px 17px;
+  margin-top:12px;
+  font-weight:600;
+}
+
+.secondary-btn{
+  background:white;
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:9px;
+  padding:9px 13px;
+}
+
+.results{
+  margin-top:22px;
+}
+
+.result{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:18px;
+  margin-bottom:12px;
+  background:white;
+}
+
+.result-top{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+}
+
+.employee-name{
+  font-size:17px;
+  font-weight:700;
+}
+
+.employee-meta{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:4px;
+}
+
+.score{
+  font-size:20px;
+  font-weight:800;
+  color:var(--primary);
+}
+
+.badges{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:12px;
+}
+
+.badge{
+  background:#f3f4f6;
+  border-radius:999px;
+  padding:5px 9px;
+  font-size:11px;
+}
+
+.badge.good{
+  background:var(--success-light);
+  color:var(--success);
+}
+
+.badge.warn{
+  background:var(--warning-light);
+  color:var(--warning);
+}
+
+.reason{
+  margin-top:13px;
+  background:#f8fafc;
+  border-radius:10px;
+  padding:11px;
+  font-size:12px;
+  line-height:1.5;
+}
+
+/* DIRECTORY */
+
+.filters{
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr;
+  gap:10px;
+  margin-bottom:16px;
+}
+
+input,select{
+  width:100%;
+  padding:11px 12px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:white;
+  outline:none;
+}
+
+.employee-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+}
+
+.employee-card{
+  background:white;
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:17px;
+}
+
+.employee-card h4{
+  margin:0 0 4px;
+  font-size:16px;
+}
+
+.employee-role{
+  color:var(--muted);
+  font-size:12px;
+}
+
+.employee-info{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  font-size:11px;
+}
+
+.info-box{
+  background:#f8fafc;
+  border-radius:8px;
+  padding:8px;
+}
+
+.info-label{
+  color:var(--muted);
+  margin-bottom:3px;
+}
+
+.info-value{
+  font-weight:600;
+}
+
+.profile-summary{
+  margin-top:12px;
+  color:#566070;
+  font-size:12px;
+  line-height:1.5;
+}
+
+/* TEAM */
+
+.team-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+}
+
+.skill-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.skill-chip{
+  padding:8px 10px;
+  border-radius:8px;
+  background:#f3f4f6;
+  font-size:12px;
+}
+
+.covered{
+  background:var(--success-light);
+  color:var(--success);
+}
+
+.missing{
+  background:var(--danger-light);
+  color:var(--danger);
+}
+
+/* LEARNING */
+
+.resource-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+}
+
+.resource{
+  border:1px solid var(--border);
+  border-radius:13px;
+  padding:16px;
+}
+
+.resource h4{
+  margin:0 0 7px;
+}
+
+.resource p{
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.5;
+}
+
+.resource-meta{
+  font-size:11px;
+  color:var(--primary);
+  font-weight:600;
+}
+
+.mentor{
+  border:1px solid var(--border);
+  border-radius:13px;
+  padding:16px;
+  margin-bottom:10px;
+}
+
+/* RESPONSIBLE USE */
+
+.principles{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:13px;
+}
+
+.principle{
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px;
+}
+
+.principle h4{
+  margin:0 0 6px;
+}
+
+.principle p{
+  margin:0;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.6;
+}
+
+/* EMPTY/LOADING */
+
+.empty{
+  text-align:center;
+  padding:30px;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.loading{
+  padding:25px;
+  color:var(--muted);
+}
+
+.error{
+  background:var(--danger-light);
+  color:var(--danger);
+  border:1px solid #f5cccc;
+  padding:12px;
+  border-radius:10px;
+  font-size:12px;
+  margin-bottom:15px;
+}
+
+/* MOBILE */
+
+.mobile-menu{
+  display:none;
+}
+
+@media(max-width:900px){
+
+  .sidebar{
+    transform:translateX(-100%);
+    transition:.25s;
+  }
+
+  .sidebar.open{
+    transform:translateX(0);
+  }
+
+  .main{
+    margin-left:0;
+    width:100%;
+    padding:18px;
+  }
+
+  .mobile-menu{
+    display:block;
+    border:1px solid var(--border);
+    background:white;
+    border-radius:9px;
+    padding:8px 10px;
+    margin-bottom:15px;
+  }
+
+  .stats{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .employee-grid,
+  .resource-grid,
+  .team-grid,
+  .principles{
+    grid-template-columns:1fr;
+  }
+
+  .filters{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:500px){
+
+  .stats{
+    grid-template-columns:1fr;
+  }
+
+  .topbar{
+    flex-direction:column;
+  }
+
+  .project-header,
+  .result-top{
+    flex-direction:column;
+  }
+}
+</style>
 </head>
 
 <body>
 
 <div class="app">
 
-  <!-- =========================
-       SIDEBAR
-  ========================== -->
+<aside class="sidebar" id="sidebar">
 
-  <aside>
+  <div class="logo">
+    <h1>SkillBridge</h1>
+    <p>Internal Expertise & Talent Matching</p>
+  </div>
 
-    <div class="brand">
+  <nav class="nav">
 
-      <div class="logo">
-        SB
-      </div>
+    <button class="active" onclick="showPage('dashboard',this)">
+      Dashboard
+    </button>
 
-      <div>
-        <strong>SkillBridge</strong>
-        <span>Nexora University</span>
-      </div>
+    <button onclick="showPage('matching',this)">
+      Project Matching
+    </button>
 
-    </div>
+    <button onclick="showPage('directory',this)">
+      Expertise Directory
+    </button>
 
-    <nav>
+    <button onclick="showPage('team',this)">
+      Team Builder
+    </button>
 
-      <button class="active" data-page="dashboard">
-        ▦ <span>Dashboard</span>
-      </button>
+    <button onclick="showPage('learning',this)">
+      Learning & Mentors
+    </button>
 
-      <button data-page="match">
-        ✦ <span>Project Matching</span>
-      </button>
+    <button onclick="showPage('responsible',this)">
+      Responsible Use
+    </button>
 
-      <button data-page="directory">
-        ⌕ <span>Expertise Directory</span>
-      </button>
+  </nav>
 
-      <button data-page="team">
-        ◫ <span>Team Builder</span>
-      </button>
+  <div class="sidebar-footer">
+    Demo platform for internal expertise discovery.<br>
+    Human review remains the final decision.
+  </div>
 
-      <button data-page="learning">
-        ◎ <span>Learning & Mentors</span>
-      </button>
+</aside>
 
-      <button data-page="governance">
-        ✓ <span>Responsible Use</span>
-      </button>
+<main class="main">
 
-    </nav>
+<button class="mobile-menu" onclick="toggleSidebar()">☰ Menu</button>
 
-    <div class="side-note">
+<div class="topbar">
 
-      <b>Human-in-the-loop</b>
+  <div>
+    <h2 id="pageTitle">Dashboard</h2>
+    <p id="pageSubtitle">
+      Discover expertise, build teams and identify development opportunities.
+    </p>
+  </div>
 
-      <br>
-
-      SkillBridge recommends.
-      A person makes the final staffing decision.
-
-    </div>
-
-  </aside>
-
-
-  <!-- =========================
-       MAIN
-  ========================== -->
-
-  <main>
-
-    <div class="topbar">
-
-      <div>
-
-        <h1 id="pageTitle">
-          SkillBridge Dashboard
-        </h1>
-
-        <div class="subtitle">
-          Find the right expertise. Build the right team. Grow the right skills.
-        </div>
-
-      </div>
-
-      <div class="badge">
-        CAPSTONE MVP
-      </div>
-
-    </div>
-
-
-    <!-- =========================
-         DASHBOARD
-    ========================== -->
-
-    <section id="dashboard" class="page active">
-
-      <div class="stats">
-
-        <div class="stat">
-
-          <small>
-            Employees
-          </small>
-
-          <div class="num" id="sEmployees">
-            —
-          </div>
-
-        </div>
-
-
-        <div class="stat">
-
-          <small>
-            Available
-          </small>
-
-          <div class="num" id="sAvailable">
-            —
-          </div>
-
-        </div>
-
-
-        <div class="stat">
-
-          <small>
-            Skills
-          </small>
-
-          <div class="num" id="sSkills">
-            —
-          </div>
-
-        </div>
-
-
-        <div class="stat">
-
-          <small>
-            Active Projects
-          </small>
-
-          <div class="num" id="sProjects">
-            —
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div class="grid2">
-
-
-        <div class="card">
-
-          <h2>
-            Project Matching Assistant
-          </h2>
-
-          <p class="muted">
-            Describe what you need and SkillBridge will rank internal experts
-            using their skills, experience, availability and project history.
-          </p>
-
-          <div class="searchbox">
-
-            <input
-              id="dashRequest"
-              value="I need someone with strong Python, SQL, data analysis and dashboard development experience."
-            >
-
-            <button
-              class="btn"
-              onclick="runMatch(document.getElementById('dashRequest').value)"
-            >
-              Find experts
-            </button>
-
-          </div>
-
-          <div id="dashResults"></div>
-
-        </div>
-
-
-        <div class="card">
-
-          <h2>
-            Active Project
-          </h2>
-
-          <div
-            id="projectSummary"
-            class="muted"
-          >
-            Loading...
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =========================
-         PROJECT MATCHING
-    ========================== -->
-
-    <section id="match" class="page">
-
-      <div class="card">
-
-        <h2>
-          Project-to-Person Matching Assistant
-        </h2>
-
-        <p class="muted">
-          Enter a business requirement in natural language.
-          No paid AI API is required for this MVP.
-        </p>
-
-
-        <div style="margin:14px 0">
-
-          <textarea
-            id="matchRequest"
-            rows="4"
-          >I need a team member for a student analytics project with strong Python, SQL, data analysis and dashboard development experience.</textarea>
-
-        </div>
-
-
-        <button
-          class="btn"
-          onclick="runMatch(document.getElementById('matchRequest').value)"
-        >
-          Generate shortlist
-        </button>
-
-
-        <div id="matchResults"></div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =========================
-         DIRECTORY
-    ========================== -->
-
-    <section id="directory" class="page">
-
-      <div class="card">
-
-        <h2>
-          Internal Expertise Directory
-        </h2>
-
-
-        <div class="filters">
-
-          <input
-            id="dirSearch"
-            placeholder="Search name, role, skill, project..."
-            oninput="renderDirectory()"
-          >
-
-
-          <select
-            id="dirAvailability"
-            onchange="renderDirectory()"
-          >
-
-            <option value="">
-              All availability
-            </option>
-
-            <option>
-              Available
-            </option>
-
-            <option>
-              Partially Available
-            </option>
-
-            <option>
-              Unavailable
-            </option>
-
-          </select>
-
-
-          <select
-            id="dirDepartment"
-            onchange="renderDirectory()"
-          >
-
-            <option value="">
-              All departments
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div class="tablewrap">
-
-          <table class="table">
-
-            <thead>
-
-              <tr>
-
-                <th>
-                  Employee
-                </th>
-
-                <th>
-                  Role
-                </th>
-
-                <th>
-                  Department
-                </th>
-
-                <th>
-                  Location
-                </th>
-
-                <th>
-                  Availability
-                </th>
-
-                <th>
-                  Skills
-                </th>
-
-              </tr>
-
-            </thead>
-
-            <tbody id="directoryBody"></tbody>
-
-          </table>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =========================
-         TEAM BUILDER
-    ========================== -->
-
-    <section id="team" class="page">
-
-      <div class="card">
-
-        <h2>
-          Team Builder
-        </h2>
-
-        <p class="muted">
-          Choose a project need. SkillBridge identifies complementary people
-          and highlights capability gaps.
-        </p>
-
-
-        <div class="searchbox">
-
-          <input
-            id="teamRequest"
-            value="Build a team for a student analytics dashboard using Python, SQL, data analysis, dashboard development and presentation skills."
-          >
-
-          <button
-            class="btn"
-            onclick="buildTeam()"
-          >
-            Build team
-          </button>
-
-        </div>
-
-
-        <div id="teamResults"></div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =========================
-         LEARNING
-    ========================== -->
-
-    <section id="learning" class="page">
-
-      <div class="grid2">
-
-        <div class="card">
-
-          <h2>
-            Learning Resources
-          </h2>
-
-          <div id="resources"></div>
-
-        </div>
-
-
-        <div class="card">
-
-          <h2>
-            Internal Mentors
-          </h2>
-
-          <div id="mentors"></div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =========================
-         GOVERNANCE
-    ========================== -->
-
-    <section id="governance" class="page">
-
-      <div class="card">
-
-        <h2>
-          Responsible Use & Bias Controls
-        </h2>
-
-        <p class="muted">
-          These controls are part of the capstone design,
-          not an optional add-on.
-        </p>
-
-
-        <div
-          class="profile"
-          style="margin-top:15px"
-        >
-
-
-          <div>
-
-            <strong>
-              Human review
-            </strong>
-
-            <br>
-
-            <span class="muted">
-              Recommendations support decisions;
-              they do not automatically assign employees.
-            </span>
-
-          </div>
-
-
-          <div>
-
-            <strong>
-              Explainability
-            </strong>
-
-            <br>
-
-            <span class="muted">
-              Every recommendation shows matching skills,
-              experience and relevant project evidence.
-            </span>
-
-          </div>
-
-
-          <div>
-
-            <strong>
-              Data minimisation
-            </strong>
-
-            <br>
-
-            <span class="muted">
-              The MVP avoids sensitive personal attributes
-              and uses work-related capability data.
-            </span>
-
-          </div>
-
-
-          <div>
-
-            <strong>
-              Profile correction
-            </strong>
-
-            <br>
-
-            <span class="muted">
-              Employees should be able to review and correct
-              inaccurate capability information.
-            </span>
-
-          </div>
-
-
-          <div>
-
-            <strong>
-              Availability fairness
-            </strong>
-
-            <br>
-
-            <span class="muted">
-              Availability is used as a staffing constraint,
-              not as a measure of employee value.
-            </span>
-
-          </div>
-
-
-          <div>
-
-            <strong>
-              Bias monitoring
-            </strong>
-
-            <br>
-
-            <span class="muted">
-              Managers should periodically review recommendations
-              for systematic exclusion or over-reliance on past project history.
-            </span>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-  </main>
+  <div class="status">
+    <span class="dot"></span>
+    Supabase Connected
+  </div>
 
 </div>
 
+<!-- DASHBOARD -->
 
-<div
-  class="toast"
-  id="toast"
-></div>
+<section id="dashboard" class="page active">
 
+  <div class="stats">
+
+    <div class="stat">
+      <div class="stat-label">Employees</div>
+      <div class="stat-value" id="statEmployees">—</div>
+      <div class="stat-note">Anonymised internal profiles</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">Available</div>
+      <div class="stat-value" id="statAvailable">—</div>
+      <div class="stat-note">Currently available staff</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">Skills</div>
+      <div class="stat-value" id="statSkills">—</div>
+      <div class="stat-note">Searchable capabilities</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">Active Projects</div>
+      <div class="stat-value" id="statProjects">—</div>
+      <div class="stat-note">Current project requirements</div>
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <h3>Active Project</h3>
+
+    <div id="dashboardProject">
+      <div class="loading">Loading project...</div>
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <h3>How SkillBridge Works</h3>
+
+    <div class="principles">
+
+      <div class="principle">
+        <h4>1. Describe the need</h4>
+        <p>
+          A manager describes the skills and experience required for a project.
+        </p>
+      </div>
+
+      <div class="principle">
+        <h4>2. Search expertise</h4>
+        <p>
+          SkillBridge searches employee skills, experience, availability and project history.
+        </p>
+      </div>
+
+      <div class="principle">
+        <h4>3. Explain recommendations</h4>
+        <p>
+          Each recommendation includes matching skills, evidence and potential gaps.
+        </p>
+      </div>
+
+      <div class="principle">
+        <h4>4. Human makes the decision</h4>
+        <p>
+          The platform supports decision-making but does not automatically select employees.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+<!-- MATCHING -->
+
+<section id="matching" class="page">
+
+  <div class="card">
+
+    <h3>Project Matching Assistant</h3>
+
+    <div class="card-subtitle">
+      Describe the project requirement in natural language. SkillBridge will identify relevant capabilities and rank available employees.
+    </div>
+
+    <textarea id="requestText">I need a team member for a university student-success analytics project with strong Python, SQL, data analysis and dashboard development experience.</textarea>
+
+    <button class="primary-btn" onclick="runMatching()">
+      Find Matching Experts
+    </button>
+
+  </div>
+
+  <div id="matchingResults"></div>
+
+</section>
+
+<!-- DIRECTORY -->
+
+<section id="directory" class="page">
+
+  <div class="card">
+
+    <h3>Expertise Directory</h3>
+
+    <div class="card-subtitle">
+      Search internal employee capabilities, experience and project history.
+    </div>
+
+    <div class="filters">
+
+      <input
+        id="employeeSearch"
+        placeholder="Search name, skill, role, project..."
+        oninput="renderDirectory()"
+      >
+
+      <select id="availabilityFilter" onchange="renderDirectory()">
+        <option value="">All availability</option>
+        <option value="Available">Available</option>
+        <option value="Partially Available">Partially Available</option>
+        <option value="Unavailable">Unavailable</option>
+      </select>
+
+      <select id="departmentFilter" onchange="renderDirectory()">
+        <option value="">All departments</option>
+      </select>
+
+    </div>
+
+  </div>
+
+  <div id="employeeGrid" class="employee-grid"></div>
+
+</section>
+
+<!-- TEAM -->
+
+<section id="team" class="page">
+
+  <div class="card">
+
+    <h3>Team Builder</h3>
+
+    <div class="card-subtitle">
+      Build a team around the requirements of the active project and identify missing capabilities.
+    </div>
+
+    <button class="primary-btn" onclick="buildTeam()">
+      Build Recommended Team
+    </button>
+
+  </div>
+
+  <div id="teamResults"></div>
+
+</section>
+
+<!-- LEARNING -->
+
+<section id="learning" class="page">
+
+  <div class="card">
+
+    <h3>Learning Resources</h3>
+
+    <div class="card-subtitle">
+      Internal learning opportunities linked to project capabilities.
+    </div>
+
+    <div id="resources" class="resource-grid"></div>
+
+  </div>
+
+  <div class="card">
+
+    <h3>Internal Mentors</h3>
+
+    <div class="card-subtitle">
+      Experienced employees who can support capability development and knowledge transfer.
+    </div>
+
+    <div id="mentors"></div>
+
+  </div>
+
+  <div class="card">
+
+    <h3>Project Knowledge-Transfer Pack</h3>
+
+    <div id="knowledgePack"></div>
+
+  </div>
+
+</section>
+
+<!-- RESPONSIBLE -->
+
+<section id="responsible" class="page">
+
+  <div class="card">
+
+    <h3>Responsible Use & Governance</h3>
+
+    <div class="card-subtitle">
+      SkillBridge is designed as a decision-support system rather than an automated hiring or staffing decision-maker.
+    </div>
+
+    <div class="principles">
+
+      <div class="principle">
+        <h4>Human review</h4>
+        <p>
+          Recommendations are advisory. A manager or authorised human makes the final staffing decision.
+        </p>
+      </div>
+
+      <div class="principle">
+        <h4>Explainability</h4>
+        <p>
+          Recommendations show matching skills, experience, project evidence and potential gaps.
+        </p>
+      </div>
+
+      <div class="principle">
+        <h4>Data minimisation</h4>
+        <p>
+          The demo uses anonymised professional information rather than sensitive personal data.
+        </p>
+      </div>
+
+      <div class="principle">
+        <h4>Profile correction</h4>
+        <p>
+          Employees should be able to review and correct their skills, experience and availability information.
+        </p>
+      </div>
+
+      <div class="principle">
+        <h4>Availability fairness</h4>
+        <p>
+          Availability is used as a staffing constraint, not as a measure of employee value or capability.
+        </p>
+      </div>
+
+      <div class="principle">
+        <h4>Bias monitoring</h4>
+        <p>
+          Recommendations should be periodically reviewed for systematic differences across departments, locations and other relevant groups.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+</main>
+
+</div>
 
 <script>
 
 /* =========================================================
-   SUPABASE CONNECTION
+   SUPABASE
 ========================================================= */
 
 const SUPABASE_URL =
@@ -1098,7 +986,7 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
   "sb_publishable_eRIAkpOmlZYJVuF_8xpUJA_F0O55ulo";
 
-const db =
+const supabaseClient =
   window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
@@ -1106,165 +994,199 @@ const db =
 
 
 /* =========================================================
-   DATA
+   GLOBAL DATA
 ========================================================= */
 
 let employees = [];
 let skills = [];
+let employeeSkills = [];
 let projects = [];
 let requirements = [];
-let empSkills = [];
 let resources = [];
 let mentors = [];
+let knowledgePacks = [];
+
+let activeProject = null;
 
 
 /* =========================================================
-   HELPERS
+   PAGE NAVIGATION
 ========================================================= */
 
-const esc = (s) =>
-  String(s ?? "")
-    .replace(/[&<>"']/g, m => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;"
-    }[m]));
+const pageInfo = {
+
+  dashboard:{
+    title:"Dashboard",
+    subtitle:"Discover expertise, build teams and identify development opportunities."
+  },
+
+  matching:{
+    title:"Project Matching",
+    subtitle:"Find internal experts for a project and understand why they match."
+  },
+
+  directory:{
+    title:"Expertise Directory",
+    subtitle:"Search internal employee capabilities, experience and project history."
+  },
+
+  team:{
+    title:"Team Builder",
+    subtitle:"Build a project team and identify missing capabilities."
+  },
+
+  learning:{
+    title:"Learning & Mentors",
+    subtitle:"Find learning opportunities and internal mentors."
+  },
+
+  responsible:{
+    title:"Responsible Use",
+    subtitle:"Understand how SkillBridge manages explainability, fairness and human oversight."
+  }
+
+};
 
 
-const norm = (s) =>
-  String(s || "").toLowerCase();
+function showPage(page, button){
+
+  document.querySelectorAll(".page")
+    .forEach(p => p.classList.remove("active"));
+
+  document.getElementById(page)
+    .classList.add("active");
+
+  document.querySelectorAll(".nav button")
+    .forEach(b => b.classList.remove("active"));
+
+  if(button){
+    button.classList.add("active");
+  }
+
+  document.getElementById("pageTitle")
+    .textContent = pageInfo[page].title;
+
+  document.getElementById("pageSubtitle")
+    .textContent = pageInfo[page].subtitle;
+
+  if(window.innerWidth <= 900){
+    document.getElementById("sidebar")
+      .classList.remove("open");
+  }
+
+}
 
 
-function toast(message) {
+function toggleSidebar(){
 
-  const t =
-    document.getElementById("toast");
-
-  t.textContent = message;
-
-  t.style.display = "block";
-
-  setTimeout(() => {
-
-    t.style.display = "none";
-
-  }, 2500);
+  document.getElementById("sidebar")
+    .classList.toggle("open");
 
 }
 
 
 /* =========================================================
-   LOAD SUPABASE DATA
+   INITIAL LOAD
 ========================================================= */
 
-async function loadData() {
+async function loadData(){
 
-  try {
+  try{
 
     const [
-      e,
-      s,
-      p,
-      r,
-      es,
-      lr,
-      m
+      employeesRes,
+      skillsRes,
+      employeeSkillsRes,
+      projectsRes,
+      requirementsRes,
+      resourcesRes,
+      mentorsRes,
+      packsRes
     ] = await Promise.all([
 
-      db
+      supabaseClient
         .from("skillbridge_employees")
-        .select("*"),
+        .select("*")
+        .order("employee_code"),
 
-      db
+      supabaseClient
         .from("skillbridge_skills")
-        .select("*"),
+        .select("*")
+        .order("name"),
 
-      db
-        .from("skillbridge_projects")
-        .select("*"),
-
-      db
-        .from("skillbridge_project_requirements")
-        .select("*"),
-
-      db
+      supabaseClient
         .from("skillbridge_employee_skills")
         .select("*"),
 
-      db
-        .from("skillbridge_learning_resources")
+      supabaseClient
+        .from("skillbridge_projects")
+        .select("*")
+        .order("created_at",{ascending:false}),
+
+      supabaseClient
+        .from("skillbridge_project_requirements")
         .select("*"),
 
-      db
+      supabaseClient
+        .from("skillbridge_learning_resources")
+        .select("*")
+        .order("title"),
+
+      supabaseClient
         .from("skillbridge_mentors")
+        .select("*"),
+
+      supabaseClient
+        .from("skillbridge_knowledge_packs")
         .select("*")
 
     ]);
 
 
-    const errors =
-      [
-        e,
-        s,
-        p,
-        r,
-        es,
-        lr,
-        m
-      ].filter(x => x.error);
+    if(employeesRes.error) throw employeesRes.error;
+    if(skillsRes.error) throw skillsRes.error;
+    if(employeeSkillsRes.error) throw employeeSkillsRes.error;
+    if(projectsRes.error) throw projectsRes.error;
+    if(requirementsRes.error) throw requirementsRes.error;
+    if(resourcesRes.error) throw resourcesRes.error;
+    if(mentorsRes.error) throw mentorsRes.error;
+    if(packsRes.error) throw packsRes.error;
 
 
-    if (errors.length) {
-
-      throw errors[0].error;
-
-    }
-
-
-    employees =
-      e.data || [];
-
-    skills =
-      s.data || [];
-
-    projects =
-      p.data || [];
-
-    requirements =
-      r.data || [];
-
-    empSkills =
-      es.data || [];
-
-    resources =
-      lr.data || [];
-
-    mentors =
-      m.data || [];
+    employees = employeesRes.data || [];
+    skills = skillsRes.data || [];
+    employeeSkills = employeeSkillsRes.data || [];
+    projects = projectsRes.data || [];
+    requirements = requirementsRes.data || [];
+    resources = resourcesRes.data || [];
+    mentors = mentorsRes.data || [];
+    knowledgePacks = packsRes.data || [];
 
 
-    renderStats();
+    activeProject =
+      projects.find(p => p.status === "Active") ||
+      projects[0] ||
+      null;
 
+
+    updateDashboard();
+    renderProject();
+    populateDepartmentFilter();
     renderDirectory();
-
     renderResources();
-
     renderMentors();
-
-    renderProjectSummary();
-
-    fillDepartments();
+    renderKnowledgePack();
 
 
-  } catch (err) {
+  }catch(error){
 
-    console.error(err);
+    console.error(error);
 
-    toast(
-      "Could not load Supabase data. Check your tables and RLS policies."
-    );
+    document.getElementById("dashboardProject").innerHTML =
+      `<div class="error">
+        Unable to load Supabase data.
+        Please check the browser console for details.
+      </div>`;
 
   }
 
@@ -1272,67 +1194,53 @@ async function loadData() {
 
 
 /* =========================================================
-   DASHBOARD STATS
+   SKILL LOOKUP
+   THIS FIXES THE UUID ISSUE
 ========================================================= */
 
-function renderStats() {
+function getSkillById(id){
 
-  document.getElementById(
-    "sEmployees"
-  ).textContent =
-    employees.length;
-
-
-  document.getElementById(
-    "sAvailable"
-  ).textContent =
-    employees.filter(
-      e => e.availability === "Available"
-    ).length;
-
-
-  document.getElementById(
-    "sSkills"
-  ).textContent =
-    skills.length;
-
-
-  document.getElementById(
-    "sProjects"
-  ).textContent =
-    projects.filter(
-      p => p.status === "Active"
-    ).length;
+  return skills.find(skill =>
+    String(skill.id) === String(id)
+  );
 
 }
 
 
-/* =========================================================
-   DEPARTMENTS
-========================================================= */
+function getSkillName(id){
 
-function fillDepartments() {
+  const skill = getSkillById(id);
 
-  const select =
-    document.getElementById(
-      "dirDepartment"
-    );
+  return skill
+    ? skill.name
+    : "Unknown skill";
+
+}
 
 
-  [
-    ...new Set(
-      employees
-        .map(e => e.department)
-        .filter(Boolean)
+function getEmployeeById(id){
+
+  return employees.find(employee =>
+    String(employee.id) === String(id)
+  );
+
+}
+
+
+function getEmployeeSkills(employeeId){
+
+  return employeeSkills
+    .filter(es =>
+      String(es.employee_id) === String(employeeId)
     )
-  ]
-    .sort()
-    .forEach(department => {
+    .map(es => {
 
-      select.insertAdjacentHTML(
-        "beforeend",
-        `<option>${esc(department)}</option>`
-      );
+      const skill = getSkillById(es.skill_id);
+
+      return {
+        ...es,
+        skillName: skill ? skill.name : "Unknown skill"
+      };
 
     });
 
@@ -1340,102 +1248,637 @@ function fillDepartments() {
 
 
 /* =========================================================
-   EMPLOYEE SKILLS
+   DASHBOARD
 ========================================================= */
 
-function employeeSkillNames(
-  employeeId
-) {
+function updateDashboard(){
 
-  return empSkills
+  document.getElementById("statEmployees")
+    .textContent = employees.length;
 
-    .filter(
-      x =>
-        x.employee_id === employeeId
-    )
+  document.getElementById("statAvailable")
+    .textContent =
+      employees.filter(e =>
+        e.availability_status === "Available"
+      ).length;
 
-    .map(x => {
+  document.getElementById("statSkills")
+    .textContent = skills.length;
 
-      const skill =
-        skills.find(
-          s =>
-            s.id === x.skill_id
+  document.getElementById("statProjects")
+    .textContent =
+      projects.filter(p =>
+        p.status === "Active"
+      ).length;
+
+}
+
+
+function renderProject(){
+
+  if(!activeProject){
+
+    document.getElementById("dashboardProject").innerHTML =
+      `<div class="empty">No active project found.</div>`;
+
+    return;
+
+  }
+
+  const reqs =
+    requirements.filter(r =>
+      String(r.project_id) === String(activeProject.id)
+    );
+
+  document.getElementById("dashboardProject").innerHTML = `
+
+    <div class="project-header">
+
+      <div>
+
+        <div class="project-code">
+          ${escapeHtml(activeProject.project_code)}
+        </div>
+
+        <div class="project-title">
+          ${escapeHtml(activeProject.title)}
+        </div>
+
+        <div class="project-description">
+          ${escapeHtml(activeProject.description || "")}
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="requirements">
+
+      ${
+        reqs.length
+        ? reqs.map(r => `
+
+            <div class="requirement">
+
+              <strong>
+                ${escapeHtml(getSkillName(r.skill_id))}
+              </strong>
+
+              ·
+
+              <span class="level">
+                ${escapeHtml(r.required_level || "Required")}
+              </span>
+
+            </div>
+
+        `).join("")
+        : `<div class="empty">No requirements listed.</div>`
+      }
+
+    </div>
+
+  `;
+
+}
+
+
+/* =========================================================
+   MATCHING
+========================================================= */
+
+function normalise(text){
+
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s]/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+
+}
+
+
+const skillAliases = {
+
+  "python":[
+    "python",
+    "py"
+  ],
+
+  "sql":[
+    "sql",
+    "database",
+    "databases"
+  ],
+
+  "data analysis":[
+    "data analysis",
+    "analytics",
+    "data analytics",
+    "analysis"
+  ],
+
+  "dashboard development":[
+    "dashboard",
+    "dashboards",
+    "dashboard development",
+    "reporting dashboard",
+    "bi dashboard"
+  ],
+
+  "excel":[
+    "excel",
+    "spreadsheet",
+    "spreadsheets"
+  ],
+
+  "power bi":[
+    "power bi",
+    "powerbi",
+    "bi"
+  ],
+
+  "javascript":[
+    "javascript",
+    "js"
+  ],
+
+  "canva":[
+    "canva"
+  ],
+
+  "video editing":[
+    "video editing",
+    "video",
+    "editing"
+  ],
+
+  "digital marketing":[
+    "digital marketing",
+    "marketing",
+    "campaign"
+  ],
+
+  "project management":[
+    "project management",
+    "project manager",
+    "project coordination"
+  ],
+
+  "research":[
+    "research",
+    "researcher"
+  ],
+
+  "communication":[
+    "communication",
+    "communications"
+  ],
+
+  "ux design":[
+    "ux",
+    "ux design",
+    "user experience"
+  ],
+
+  "training & mentoring":[
+    "training",
+    "mentoring",
+    "mentor",
+    "coaching"
+  ],
+
+  "presentation design":[
+    "presentation",
+    "presentations",
+    "presentation design"
+  ],
+
+  "content writing":[
+    "content writing",
+    "writing",
+    "content"
+  ]
+
+};
+
+
+function detectRequestedSkills(text){
+
+  const input = normalise(text);
+
+  const detected = [];
+
+  skills.forEach(skill => {
+
+    const canonical =
+      normalise(skill.name);
+
+    const aliases =
+      skillAliases[skill.name.toLowerCase()] || [canonical];
+
+    const matched =
+      aliases.some(alias =>
+        input.includes(normalise(alias))
+      );
+
+    if(matched){
+      detected.push(skill);
+    }
+
+  });
+
+  return detected;
+
+}
+
+
+function skillLevelScore(actual, required){
+
+  const levels = {
+    beginner:1,
+    intermediate:2,
+    advanced:3,
+    expert:4
+  };
+
+  const a =
+    levels[String(actual || "").toLowerCase()] || 0;
+
+  const r =
+    levels[String(required || "").toLowerCase()] || 1;
+
+  if(a >= r) return 1;
+
+  if(a === r - 1) return .7;
+
+  if(a === r - 2) return .4;
+
+  return 0;
+
+}
+
+
+function runMatching(){
+
+  const text =
+    document.getElementById("requestText").value.trim();
+
+  if(!text){
+
+    document.getElementById("matchingResults").innerHTML =
+      `<div class="card">
+        <div class="error">
+          Please describe the project requirement.
+        </div>
+      </div>`;
+
+    return;
+
+  }
+
+
+  const requestedSkills =
+    detectRequestedSkills(text);
+
+
+  let projectRequirements = [];
+
+  if(activeProject){
+
+    projectRequirements =
+      requirements.filter(r =>
+        String(r.project_id) === String(activeProject.id)
+      );
+
+  }
+
+
+  const relevantSkills =
+    requestedSkills.length
+    ? requestedSkills
+    : projectRequirements
+        .map(r => getSkillById(r.skill_id))
+        .filter(Boolean);
+
+
+  const availableEmployees =
+    employees.filter(e =>
+      e.availability_status !== "Unavailable"
+    );
+
+
+  const ranked =
+    availableEmployees.map(employee => {
+
+      const empSkills =
+        getEmployeeSkills(employee.id);
+
+
+      let skillScore = 0;
+      let matchedSkills = [];
+      let gaps = [];
+
+
+      relevantSkills.forEach(skill => {
+
+        const employeeSkill =
+          empSkills.find(es =>
+            String(es.skill_id) === String(skill.id)
+          );
+
+
+        const projectReq =
+          projectRequirements.find(r =>
+            String(r.skill_id) === String(skill.id)
+          );
+
+
+        const requiredLevel =
+          projectReq
+          ? projectReq.required_level
+          : "Intermediate";
+
+
+        if(employeeSkill){
+
+          const contribution =
+            skillLevelScore(
+              employeeSkill.level,
+              requiredLevel
+            );
+
+          skillScore += contribution;
+
+          matchedSkills.push({
+            name:skill.name,
+            level:employeeSkill.level
+          });
+
+        }else{
+
+          gaps.push(skill.name);
+
+        }
+
+      });
+
+
+      const skillCoverage =
+        relevantSkills.length
+        ? skillScore / relevantSkills.length
+        : 0;
+
+
+      const experienceScore =
+        Math.min(
+          Number(employee.experience_years || 0) / 10,
+          1
         );
 
 
-      return skill
-        ? {
-            name: skill.name,
-            level:
-              x.level ||
-              "Intermediate",
-            years:
-              Number(
-                x.years_experience || 0
-              )
+      let availabilityScore = 1;
+
+      if(employee.availability_status === "Partially Available"){
+        availabilityScore = .7;
+      }
+
+
+      const historyText =
+        (employee.project_history || [])
+          .join(" ")
+          .toLowerCase();
+
+
+      const interestText =
+        (employee.interests || [])
+          .join(" ")
+          .toLowerCase();
+
+
+      let evidenceMatches = 0;
+
+
+      relevantSkills.forEach(skill => {
+
+        const skillText =
+          skill.name.toLowerCase();
+
+        if(
+          historyText.includes(skillText) ||
+          interestText.includes(skillText)
+        ){
+          evidenceMatches++;
+        }
+
+      });
+
+
+      const evidenceScore =
+        relevantSkills.length
+        ? Math.min(
+            evidenceMatches / relevantSkills.length,
+            1
+          )
+        : 0;
+
+
+      const totalScore =
+        (
+          skillCoverage * .60 +
+          experienceScore * .15 +
+          availabilityScore * .15 +
+          evidenceScore * .10
+        ) * 100;
+
+
+      return {
+
+        employee,
+
+        score:Math.round(totalScore),
+
+        matchedSkills,
+
+        gaps,
+
+        evidenceMatches
+
+      };
+
+    });
+
+
+  ranked.sort((a,b) =>
+    b.score - a.score
+  );
+
+
+  const top =
+    ranked.slice(0,6);
+
+
+  renderMatchingResults(
+    top,
+    relevantSkills
+  );
+
+}
+
+
+function renderMatchingResults(results, requestedSkills){
+
+  const container =
+    document.getElementById("matchingResults");
+
+
+  if(!results.length){
+
+    container.innerHTML =
+      `<div class="card">
+        <div class="empty">
+          No matching employees found.
+        </div>
+      </div>`;
+
+    return;
+
+  }
+
+
+  const detected =
+    requestedSkills
+      .map(s => s.name);
+
+
+  container.innerHTML = `
+
+    <div class="card">
+
+      <h3>Matching Results</h3>
+
+      <div class="card-subtitle">
+
+        Detected capabilities:
+
+        <strong>
+          ${
+            detected.length
+            ? detected.map(escapeHtml).join(", ")
+            : "No specific skills detected"
           }
-        : null;
+        </strong>
 
-    })
+      </div>
 
-    .filter(Boolean);
+      <div class="results">
 
-}
+        ${
+          results.map((result,index) => {
 
-
-/* =========================================================
-   EMPLOYEE SEARCH TEXT
-========================================================= */
-
-function employeeText(e) {
-
-  return [
-
-    e.employee_code,
-    e.name,
-    e.department,
-    e.role,
-    e.location,
-    e.interests,
-    e.project_history,
-
-    ...employeeSkillNames(e.id)
-      .map(x => x.name)
-
-  ].join(" ");
-
-}
+            const e =
+              result.employee;
 
 
-/* =========================================================
-   AVAILABILITY STYLE
-========================================================= */
-
-function availabilityClass(
-  availability
-) {
-
-  if (
-    availability ===
-    "Available"
-  ) {
-
-    return "available";
-
-  }
+            const availabilityClass =
+              e.availability_status === "Available"
+              ? "good"
+              : "warn";
 
 
-  if (
-    availability ===
-    "Partially Available"
-  ) {
-
-    return "partial";
-
-  }
+            const matched =
+              result.matchedSkills
+                .map(s => s.name);
 
 
-  return "unavailable";
+            const why =
+              matched.length
+              ? `${e.name} matches ${matched.join(", ")} and brings ${e.experience_years} years of professional experience. ${
+                  result.evidenceMatches
+                  ? "Their interests or previous projects also provide supporting evidence."
+                  : ""
+                }`
+              : `${e.name} has relevant experience, but the profile does not show a direct match for the detected capabilities.`;
+
+
+            return `
+
+              <div class="result">
+
+                <div class="result-top">
+
+                  <div>
+
+                    <div class="employee-name">
+                      #${index+1} · ${escapeHtml(e.name)}
+                    </div>
+
+                    <div class="employee-meta">
+                      ${escapeHtml(e.role)}
+                      ·
+                      ${escapeHtml(e.department)}
+                      ·
+                      ${escapeHtml(e.location)}
+                    </div>
+
+                  </div>
+
+                  <div class="score">
+                    ${result.score}%
+                  </div>
+
+                </div>
+
+
+                <div class="badges">
+
+                  <span class="badge ${availabilityClass}">
+                    ${escapeHtml(e.availability_status)}
+                  </span>
+
+                  <span class="badge">
+                    ${escapeHtml(String(e.experience_years))} years experience
+                  </span>
+
+                  ${
+                    matched.map(skill => `
+                      <span class="badge good">
+                        ✓ ${escapeHtml(skill)}
+                      </span>
+                    `).join("")
+                  }
+
+                  ${
+                    result.gaps.map(skill => `
+                      <span class="badge warn">
+                        Gap: ${escapeHtml(skill)}
+                      </span>
+                    `).join("")
+                  }
+
+                </div>
+
+
+                <div class="reason">
+
+                  <strong>Why recommended:</strong>
+
+                  ${escapeHtml(why)}
+
+                </div>
+
+              </div>
+
+            `;
+
+          }).join("")
+        }
+
+      </div>
+
+    </div>
+
+  `;
 
 }
 
@@ -1444,864 +1887,187 @@ function availabilityClass(
    DIRECTORY
 ========================================================= */
 
-function renderDirectory() {
+function populateDepartmentFilter(){
 
-  const q =
-    norm(
-      document.getElementById(
-        "dirSearch"
-      ).value
+  const select =
+    document.getElementById("departmentFilter");
+
+
+  const departments =
+    [...new Set(
+      employees.map(e => e.department)
+    )].sort();
+
+
+  select.innerHTML =
+    `<option value="">All departments</option>` +
+    departments.map(d =>
+      `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`
+    ).join("");
+
+}
+
+
+function renderDirectory(){
+
+  const search =
+    normalise(
+      document.getElementById("employeeSearch").value
     );
 
 
   const availability =
-    document.getElementById(
-      "dirAvailability"
-    ).value;
+    document.getElementById("availabilityFilter").value;
 
 
   const department =
-    document.getElementById(
-      "dirDepartment"
-    ).value;
-
-
-  const rows =
-    employees.filter(e =>
-
-      (!q ||
-        norm(
-          employeeText(e)
-        ).includes(q))
-
-      &&
-
-      (!availability ||
-        e.availability ===
-        availability)
-
-      &&
-
-      (!department ||
-        e.department ===
-        department)
-
-    );
-
-
-  const body =
-    document.getElementById(
-      "directoryBody"
-    );
-
-
-  if (!rows.length) {
-
-    body.innerHTML = `
-      <tr>
-        <td
-          colspan="6"
-          class="empty"
-        >
-          No matching employees.
-        </td>
-      </tr>
-    `;
-
-    return;
-
-  }
-
-
-  body.innerHTML =
-    rows
-      .map(e => `
-
-        <tr>
-
-          <td>
-            <b>
-              ${esc(e.employee_code)}
-            </b>
-
-            <br>
-
-            ${esc(e.name)}
-          </td>
-
-
-          <td>
-            ${esc(e.role)}
-          </td>
-
-
-          <td>
-            ${esc(e.department)}
-          </td>
-
-
-          <td>
-            ${esc(e.location)}
-          </td>
-
-
-          <td>
-
-            <span
-              class="pill
-              ${availabilityClass(
-                e.availability
-              )}"
-            >
-
-              ${esc(
-                e.availability
-              )}
-
-            </span>
-
-          </td>
-
-
-          <td>
-
-            ${employeeSkillNames(
-              e.id
-            )
-              .map(x => `
-
-                <span class="skill">
-
-                  ${esc(x.name)}
-                  ·
-                  ${esc(x.level)}
-
-                </span>
-
-              `)
-              .join("")}
-
-          </td>
-
-        </tr>
-
-      `)
-      .join("");
-
-}
-
-
-/* =========================================================
-   PROJECT SUMMARY
-========================================================= */
-
-function renderProjectSummary() {
-
-  const project =
-    projects.find(
-      p => p.status === "Active"
-    ) ||
-    projects[0];
-
-
-  const container =
-    document.getElementById(
-      "projectSummary"
-    );
-
-
-  if (!project) {
-
-    container.textContent =
-      "No projects found.";
-
-    return;
-
-  }
-
-
-  const req =
-    requirements.filter(
-      r =>
-        r.project_id ===
-        project.id
-    );
-
-
-  container.innerHTML = `
-
-    <b>
-      ${esc(
-        project.project_code || ""
-      )}
-    </b>
-
-    <h3
-      style="margin:7px 0"
-    >
-
-      ${esc(project.title)}
-
-    </h3>
-
-
-    <p>
-      ${esc(
-        project.description
-      )}
-    </p>
-
-
-    <div>
-
-      ${req
-        .map(r => `
-
-          <span class="skill">
-
-            ${esc(
-              r.skill_name ||
-              r.skill_id
-            )}
-
-            ·
-
-            ${esc(
-              r.required_level ||
-              ""
-            )}
-
-          </span>
-
-        `)
-        .join("")}
-
-    </div>
-
-  `;
-
-}
-
-
-/* =========================================================
-   NATURAL LANGUAGE SKILL EXTRACTION
-========================================================= */
-
-function extractRequiredSkills(
-  text
-) {
-
-  const lower =
-    norm(text);
-
-
-  const aliases = {
-
-    "power bi": [
-      "power bi",
-      "bi dashboard",
-      "business intelligence"
-    ],
-
-    "dashboard development": [
-      "dashboard",
-      "dashboards",
-      "visualisation",
-      "visualization"
-    ],
-
-    "data analysis": [
-      "data analysis",
-      "analytics",
-      "analyse data",
-      "analyze data"
-    ],
-
-    "python": [
-      "python"
-    ],
-
-    "sql": [
-      "sql",
-      "database queries"
-    ],
-
-    "excel": [
-      "excel",
-      "spreadsheets"
-    ],
-
-    "javascript": [
-      "javascript",
-      "js"
-    ],
-
-    "canva": [
-      "canva"
-    ],
-
-    "video editing": [
-      "video editing",
-      "video"
-    ],
-
-    "digital marketing": [
-      "digital marketing",
-      "marketing"
-    ],
-
-    "project management": [
-      "project management",
-      "project coordinator",
-      "planning"
-    ],
-
-    "research": [
-      "research",
-      "research study"
-    ],
-
-    "communication": [
-      "communication",
-      "stakeholder"
-    ],
-
-    "ux design": [
-      "ux",
-      "user experience",
-      "ux design"
-    ],
-
-    "training & mentoring": [
-      "mentor",
-      "mentoring",
-      "training",
-      "coaching"
-    ],
-
-    "presentation design": [
-      "presentation",
-      "slides"
-    ],
-
-    "content writing": [
-      "content writing",
-      "copywriting",
-      "writing"
-    ]
-
-  };
-
-
-  return skills
-
-    .filter(skill => {
-
-      const skillName =
-        norm(skill.name);
-
-
-      const words =
-        aliases[skillName] ||
-        [skillName];
-
-
-      return words.some(
-        word =>
-          lower.includes(word)
+    document.getElementById("departmentFilter").value;
+
+
+  const filtered =
+    employees.filter(employee => {
+
+      const empSkills =
+        getEmployeeSkills(employee.id)
+          .map(s => s.skillName)
+          .join(" ");
+
+
+      const searchable = normalise(
+        [
+          employee.name,
+          employee.role,
+          employee.department,
+          employee.location,
+          employee.profile_summary,
+          ...(employee.interests || []),
+          ...(employee.project_history || []),
+          empSkills
+        ].join(" ")
       );
 
-    })
 
-    .map(
-      skill =>
-        skill.name
-    );
+      const searchMatch =
+        !search ||
+        searchable.includes(search);
 
-}
 
+      const availabilityMatch =
+        !availability ||
+        employee.availability_status === availability;
 
-/* =========================================================
-   LEVEL SCORE
-========================================================= */
 
-function levelValue(level) {
+      const departmentMatch =
+        !department ||
+        employee.department === department;
 
-  return {
 
-    "Beginner": 1,
-    "Intermediate": 2,
-    "Advanced": 3,
-    "Expert": 4
+      return (
+        searchMatch &&
+        availabilityMatch &&
+        departmentMatch
+      );
 
-  }[level] || 2;
+    });
 
-}
 
+  const grid =
+    document.getElementById("employeeGrid");
 
-/* =========================================================
-   EMPLOYEE MATCH SCORE
-========================================================= */
 
-function scoreEmployee(
-  employee,
-  requiredSkills
-) {
+  if(!filtered.length){
 
-  const mine =
-    employeeSkillNames(
-      employee.id
-    );
-
-
-  const matched =
-    mine.filter(x =>
-
-      requiredSkills
-        .map(norm)
-        .includes(
-          norm(x.name)
-        )
-
-    );
-
-
-  const missing =
-    requiredSkills.filter(
-      required =>
-        !mine.some(
-          x =>
-            norm(x.name) ===
-            norm(required)
-        )
-    );
-
-
-  const skillScore =
-    requiredSkills.length
-      ? matched.length /
-        requiredSkills.length
-      : 0;
-
-
-  const experienceScore =
-    Math.min(
-      Number(
-        employee.years_experience || 0
-      ) / 8,
-      1
-    );
-
-
-  const availabilityScore =
-    employee.availability ===
-    "Available"
-      ? 1
-      : employee.availability ===
-        "Partially Available"
-        ? 0.65
-        : 0;
-
-
-  const projectText =
-    norm(
-      employee.project_history ||
-      ""
-    );
-
-
-  const evidence =
-    requiredSkills.filter(
-      required =>
-        projectText.includes(
-          norm(
-            required
-          ).split(" ")[0]
-        )
-    ).length;
-
-
-  const evidenceScore =
-    requiredSkills.length
-      ? Math.min(
-          evidence /
-            requiredSkills.length,
-          1
-        )
-      : 0;
-
-
-  /*
-    Transparent scoring model:
-
-    Skills        60%
-    Experience    15%
-    Availability  15%
-    Evidence      10%
-  */
-
-  const score =
-    Math.round(
-
-      (
-        skillScore * 0.60 +
-
-        experienceScore * 0.15 +
-
-        availabilityScore * 0.15 +
-
-        evidenceScore * 0.10
-
-      ) * 100
-
-    );
-
-
-  return {
-
-    employee,
-
-    matched,
-
-    missing,
-
-    score
-
-  };
-
-}
-
-
-/* =========================================================
-   MATCH RESULT HTML
-========================================================= */
-
-function resultHTML(
-  result
-) {
-
-  const employee =
-    result.employee;
-
-
-  return `
-
-    <div class="result">
-
-      <div class="resulthead">
-
-        <div>
-
-          <b>
-
-            ${esc(
-              employee.employee_code
-            )}
-
-            —
-
-            ${esc(
-              employee.name
-            )}
-
-          </b>
-
-          <br>
-
-          <span class="muted">
-
-            ${esc(
-              employee.role
-            )}
-
-            ·
-
-            ${esc(
-              employee.department
-            )}
-
-            ·
-
-            ${esc(
-              employee.location
-            )}
-
-          </span>
-
+    grid.innerHTML =
+      `<div class="card">
+        <div class="empty">
+          No employees match your search.
         </div>
-
-
-        <div class="score">
-
-          ${result.score}%
-
-          match
-
-        </div>
-
-      </div>
-
-
-      <div class="progress">
-
-        <i
-          style="width:${result.score}%"
-        ></i>
-
-      </div>
-
-
-      <div class="chips">
-
-        <b>
-          Matching skills:
-        </b>
-
-
-        ${
-          result.matched.length
-
-            ?
-
-            result.matched
-              .map(skill => `
-
-                <span class="skill">
-
-                  ${esc(skill.name)}
-
-                  ·
-
-                  ${esc(skill.level)}
-
-                </span>
-
-              `)
-              .join("")
-
-            :
-
-            "None directly matched"
-
-        }
-
-      </div>
-
-
-      <div class="reason">
-
-        <b>
-          Why recommended:
-        </b>
-
-
-        ${
-          result.matched.length
-
-            ?
-
-            `Matches
-            ${result.matched.length}
-            of
-            ${
-              result.matched.length +
-              result.missing.length
-            }
-            requested capabilities,
-            with
-            ${esc(
-              employee.years_experience
-            )}
-            years of experience and
-            ${esc(
-              employee.availability
-            )}
-            availability.`
-
-            :
-
-            `Has related experience
-            but lacks the requested
-            core skills.`
-
-        }
-
-
-        ${
-          result.missing.length
-
-            ?
-
-            `<br><br>
-             <b>Potential gaps:</b>
-             ${result.missing
-               .map(esc)
-               .join(", ")}.`
-
-            :
-
-            `<br><br>
-             <b>Capability gaps:</b>
-             None detected.`
-
-        }
-
-      </div>
-
-    </div>
-
-  `;
-
-}
-
-
-/* =========================================================
-   RUN MATCH
-========================================================= */
-
-function runMatch(
-  text
-) {
-
-  const target =
-    document.getElementById(
-      "matchResults"
-    );
-
-
-  const dashboard =
-    document.getElementById(
-      "dashResults"
-    );
-
-
-  const requiredSkills =
-    extractRequiredSkills(
-      text
-    );
-
-
-  if (!requiredSkills.length) {
-
-    const message = `
-
-      <div class="empty">
-
-        I could not identify a skill
-        from the request.
-
-        <br><br>
-
-        Try terms such as:
-
-        <br>
-
-        Python · SQL · Data Analysis ·
-        Dashboard · Power BI · UX ·
-        Mentoring
-
-      </div>
-
-    `;
-
-
-    if (
-      document
-        .getElementById("match")
-        .classList
-        .contains("active")
-    ) {
-
-      target.innerHTML =
-        message;
-
-    } else {
-
-      dashboard.innerHTML =
-        message;
-
-    }
-
+      </div>`;
 
     return;
 
   }
 
 
-  const ranked =
+  grid.innerHTML =
+    filtered.map(employee => {
 
-    employees
-
-      .map(employee =>
-        scoreEmployee(
-          employee,
-          requiredSkills
-        )
-      )
-
-      .filter(
-        result =>
-          result.employee.availability !==
-          "Unavailable"
-      )
-
-      .sort(
-        (a, b) =>
-          b.score - a.score
-      )
-
-      .slice(0, 5);
+      const empSkills =
+        getEmployeeSkills(employee.id);
 
 
-  const html = `
+      return `
 
-    <div
-      style="margin-top:18px"
-    >
+        <div class="employee-card">
 
-      <b>
-        Detected capabilities:
-      </b>
+          <h4>
+            ${escapeHtml(employee.name)}
+          </h4>
 
-
-      ${requiredSkills
-        .map(skill => `
-
-          <span class="skill">
-
-            ${esc(skill)}
-
-          </span>
-
-        `)
-        .join("")}
-
-    </div>
+          <div class="employee-role">
+            ${escapeHtml(employee.role)}
+            ·
+            ${escapeHtml(employee.department)}
+          </div>
 
 
-    ${ranked
-      .map(resultHTML)
-      .join("")}
+          <div class="employee-info">
 
-  `;
+            <div class="info-box">
+              <div class="info-label">Location</div>
+              <div class="info-value">
+                ${escapeHtml(employee.location)}
+              </div>
+            </div>
+
+            <div class="info-box">
+              <div class="info-label">Availability</div>
+              <div class="info-value">
+                ${escapeHtml(employee.availability_status)}
+              </div>
+            </div>
+
+            <div class="info-box">
+              <div class="info-label">Experience</div>
+              <div class="info-value">
+                ${escapeHtml(String(employee.experience_years))} years
+              </div>
+            </div>
+
+            <div class="info-box">
+              <div class="info-label">Skills</div>
+              <div class="info-value">
+                ${empSkills.length}
+              </div>
+            </div>
+
+          </div>
 
 
-  if (
-    document
-      .getElementById("match")
-      .classList
-      .contains("active")
-  ) {
+          <div class="badges">
 
-    target.innerHTML =
-      html;
+            ${
+              empSkills.slice(0,8).map(skill => `
+                <span class="badge good">
+                  ${escapeHtml(skill.skillName)}
+                  ·
+                  ${escapeHtml(skill.level)}
+                </span>
+              `).join("")
+            }
 
-  } else {
+          </div>
 
-    dashboard.innerHTML =
-      html;
 
-  }
+          <div class="profile-summary">
+            ${escapeHtml(employee.profile_summary || "")}
+          </div>
+
+        </div>
+
+      `;
+
+    }).join("");
 
 }
 
@@ -2310,231 +2076,236 @@ function runMatch(
    TEAM BUILDER
 ========================================================= */
 
-function buildTeam() {
+function buildTeam(){
 
-  const request =
-    document.getElementById(
-      "teamRequest"
-    ).value;
+  if(!activeProject){
 
+    document.getElementById("teamResults").innerHTML =
+      `<div class="card">
+        <div class="empty">
+          No active project available.
+        </div>
+      </div>`;
 
-  const requiredSkills =
-    extractRequiredSkills(
-      request
-    );
-
-
-  const ranked =
-
-    employees
-
-      .filter(
-        employee =>
-          employee.availability !==
-          "Unavailable"
-      )
-
-      .map(employee =>
-        scoreEmployee(
-          employee,
-          requiredSkills
-        )
-      )
-
-      .sort(
-        (a, b) =>
-          b.score - a.score
-      );
-
-
-  const selected = [];
-
-  const covered =
-    new Set();
-
-
-  for (
-    const result of ranked
-  ) {
-
-    const adds =
-      result.matched.filter(
-        skill =>
-          !covered.has(
-            skill.name
-          )
-      );
-
-
-    if (adds.length) {
-
-      selected.push({
-        ...result,
-        adds
-      });
-
-
-      adds.forEach(
-        skill =>
-          covered.add(
-            skill.name
-          )
-      );
-
-    }
-
-
-    if (
-      covered.size >=
-        requiredSkills.length
-      ||
-      selected.length >= 5
-    ) {
-
-      break;
-
-    }
+    return;
 
   }
 
 
-  const gaps =
-    requiredSkills.filter(
-      skill =>
-        !covered.has(skill)
+  const projectRequirements =
+    requirements.filter(r =>
+      String(r.project_id) === String(activeProject.id)
     );
 
 
-  document.getElementById(
-    "teamResults"
-  ).innerHTML = `
-
-    <div
-      style="margin-top:18px"
-    >
-
-      <b>
-        Recommended team:
-      </b>
+  const available =
+    employees.filter(e =>
+      e.availability_status !== "Unavailable"
+    );
 
 
-      ${
-        selected
-          .map(result => `
+  const scored =
+    available.map(employee => {
 
-            <div class="result">
-
-              <b>
-
-                ${esc(
-                  result.employee
-                    .employee_code
-                )}
-
-                —
-
-                ${esc(
-                  result.employee
-                    .name
-                )}
-
-              </b>
+      const empSkills =
+        getEmployeeSkills(employee.id);
 
 
-              ·
-
-              ${esc(
-                result.employee.role
-              )}
-
-
-              ·
-
-              ${result.score}% match
+      const matched =
+        projectRequirements.filter(req =>
+          empSkills.some(es =>
+            String(es.skill_id) === String(req.skill_id)
+          )
+        );
 
 
-              <br>
+      return {
+
+        employee,
+
+        matchedCount:matched.length,
+
+        matchedSkills:
+          matched.map(req =>
+            getSkillName(req.skill_id)
+          )
+
+      };
+
+    }).sort((a,b) =>
+      b.matchedCount - a.matchedCount
+    );
 
 
-              <span class="muted">
+  const selected = [];
 
-                Adds:
+  const covered = new Set();
 
-                ${result.adds
-                  .map(
-                    skill =>
-                      esc(skill.name)
-                  )
-                  .join(", ")}
+
+  while(
+    covered.size < projectRequirements.length &&
+    selected.length < 5
+  ){
+
+    let best = null;
+    let bestNewSkills = 0;
+
+
+    scored.forEach(candidate => {
+
+      if(
+        selected.some(s =>
+          s.employee.id === candidate.employee.id
+        )
+      ){
+        return;
+      }
+
+
+      const newSkills =
+        candidate.matchedSkills.filter(skillName =>
+          !covered.has(skillName)
+        ).length;
+
+
+      if(newSkills > bestNewSkills){
+
+        bestNewSkills = newSkills;
+        best = candidate;
+
+      }
+
+    });
+
+
+    if(!best || bestNewSkills === 0){
+      break;
+    }
+
+
+    selected.push(best);
+
+
+    best.matchedSkills.forEach(skill =>
+      covered.add(skill)
+    );
+
+  }
+
+
+  const requiredNames =
+    projectRequirements.map(r =>
+      getSkillName(r.skill_id)
+    );
+
+
+  const missing =
+    requiredNames.filter(skill =>
+      !covered.has(skill)
+    );
+
+
+  document.getElementById("teamResults").innerHTML = `
+
+    <div class="team-grid">
+
+      <div class="card">
+
+        <h3>Recommended Team</h3>
+
+        <div class="card-subtitle">
+          ${selected.length} people selected to cover the greatest number of required capabilities.
+        </div>
+
+        ${
+          selected.length
+          ? selected.map((item,index) => `
+
+              <div class="result">
+
+                <div class="employee-name">
+                  ${index+1}. ${escapeHtml(item.employee.name)}
+                </div>
+
+                <div class="employee-meta">
+                  ${escapeHtml(item.employee.role)}
+                  ·
+                  ${escapeHtml(item.employee.location)}
+                </div>
+
+                <div class="badges">
+
+                  ${
+                    item.matchedSkills.map(skill => `
+                      <span class="badge good">
+                        ✓ ${escapeHtml(skill)}
+                      </span>
+                    `).join("")
+                  }
+
+                </div>
+
+              </div>
+
+          `).join("")
+          : `<div class="empty">No team could be formed.</div>`
+        }
+
+      </div>
+
+
+      <div class="card">
+
+        <h3>Capability Coverage</h3>
+
+        <div class="card-subtitle">
+          Required skills for ${escapeHtml(activeProject.title)}
+        </div>
+
+        <div class="skill-list">
+
+          ${
+            requiredNames.map(skill => `
+
+              <span class="skill-chip ${
+                covered.has(skill)
+                ? "covered"
+                : "missing"
+              }">
+
+                ${
+                  covered.has(skill)
+                  ? "✓ "
+                  : "⚠ "
+                }
+
+                ${escapeHtml(skill)}
 
               </span>
 
+            `).join("")
+          }
+
+        </div>
+
+
+        ${
+          missing.length
+          ? `
+            <div class="reason">
+              <strong>Missing capabilities:</strong>
+              ${missing.map(escapeHtml).join(", ")}
             </div>
+          `
+          : `
+            <div class="reason">
+              <strong>All required capabilities are covered.</strong>
+              Human review is still required before final staffing.
+            </div>
+          `
+        }
 
-          `)
-          .join("")
-
-      }
-
-    </div>
-
-
-    <div class="result">
-
-      <b>
-        Capability coverage:
-      </b>
-
-
-      ${requiredSkills
-        .map(skill => `
-
-          <span class="skill">
-
-            ${esc(skill)}
-
-            ${covered.has(skill)
-              ? "✓"
-              : "—"}
-
-          </span>
-
-        `)
-        .join("")}
-
-
-      <br><br>
-
-
-      ${
-        gaps.length
-
-          ?
-
-          `<span
-             style="color:var(--red)"
-           >
-
-             Missing capabilities:
-
-             ${gaps
-               .map(esc)
-               .join(", ")}
-
-           </span>`
-
-          :
-
-          `<span
-             style="color:var(--green)"
-           >
-
-             All requested capabilities
-             are covered by the proposed team.
-
-           </span>`
-
-      }
+      </div>
 
     </div>
 
@@ -2547,18 +2318,16 @@ function buildTeam() {
    LEARNING RESOURCES
 ========================================================= */
 
-function renderResources() {
+function renderResources(){
 
   const container =
-    document.getElementById(
-      "resources"
-    );
+    document.getElementById("resources");
 
 
-  if (!resources.length) {
+  if(!resources.length){
 
     container.innerHTML =
-      '<div class="empty">No resources found.</div>';
+      `<div class="empty">No learning resources found.</div>`;
 
     return;
 
@@ -2566,56 +2335,29 @@ function renderResources() {
 
 
   container.innerHTML =
-    resources
-      .map(resource => `
+    resources.map(resource => `
 
-        <div class="result">
+      <div class="resource">
 
-          <b>
-            ${esc(
-              resource.title
-            )}
-          </b>
+        <h4>
+          ${escapeHtml(resource.title)}
+        </h4>
 
-
-          <br>
-
-
-          <span class="muted">
-
-            ${esc(
-              resource.resource_type ||
-              "Resource"
-            )}
-
-            ·
-
-            ${esc(
-              resource.level ||
-              ""
-            )}
-
-          </span>
-
-
-          <p
-            style="
-              margin:7px 0;
-              font-size:13px
-            "
-          >
-
-            ${esc(
-              resource.description ||
-              "Recommended learning resource."
-            )}
-
-          </p>
-
+        <div class="resource-meta">
+          ${escapeHtml(resource.skill_name || "General")}
+          ·
+          ${escapeHtml(resource.resource_type || "Resource")}
+          ·
+          ${escapeHtml(resource.level || "All levels")}
         </div>
 
-      `)
-      .join("");
+        <p>
+          ${escapeHtml(resource.description || "")}
+        </p>
+
+      </div>
+
+    `).join("");
 
 }
 
@@ -2624,18 +2366,16 @@ function renderResources() {
    MENTORS
 ========================================================= */
 
-function renderMentors() {
+function renderMentors(){
 
   const container =
-    document.getElementById(
-      "mentors"
-    );
+    document.getElementById("mentors");
 
 
-  if (!mentors.length) {
+  if(!mentors.length){
 
     container.innerHTML =
-      '<div class="empty">No mentors found.</div>';
+      `<div class="empty">No mentors found.</div>`;
 
     return;
 
@@ -2643,164 +2383,163 @@ function renderMentors() {
 
 
   container.innerHTML =
-    mentors
-      .map(mentor => {
+    mentors.map(mentor => {
 
-        const employee =
-          employees.find(
-            e =>
-              e.id ===
-              mentor.employee_id
-          );
+      const employee =
+        getEmployeeById(mentor.employee_id);
 
 
-        return `
-
-          <div class="result">
-
-            <b>
-
-              ${esc(
-                employee?.employee_code ||
-                ""
-              )}
-
-              —
-
-              ${esc(
-                employee?.name ||
-                "Mentor"
-              )}
-
-            </b>
+      if(!employee) return "";
 
 
-            <br>
+      return `
 
+        <div class="mentor">
 
-            <span class="muted">
+          <div class="employee-name">
+            ${escapeHtml(employee.name)}
+          </div>
 
-              ${esc(
-                mentor.mentoring_area ||
-                ""
-              )}
+          <div class="employee-meta">
+            ${escapeHtml(employee.role)}
+            ·
+            ${escapeHtml(employee.location)}
+          </div>
 
-            </span>
+          <div class="badges">
 
-
-            <p
-              style="
-                margin:7px 0;
-                font-size:13px
-              "
-            >
-
-              ${esc(
-                mentor.expertise ||
-                ""
-              )}
-
-            </p>
+            ${
+              (mentor.expertise || [])
+                .map(skill => `
+                  <span class="badge good">
+                    ${escapeHtml(skill)}
+                  </span>
+                `).join("")
+            }
 
           </div>
 
-        `;
+          <div class="profile-summary">
+            Mentoring area:
+            <strong>
+              ${escapeHtml(mentor.mentoring_area || "")}
+            </strong>
+          </div>
 
-      })
-      .join("");
+        </div>
+
+      `;
+
+    }).join("");
 
 }
 
 
 /* =========================================================
-   NAVIGATION
+   KNOWLEDGE PACK
 ========================================================= */
 
-document
-  .querySelectorAll("nav button")
-  .forEach(button => {
+function renderKnowledgePack(){
 
-    button.addEventListener(
-      "click",
-      () => {
-
-        document
-          .querySelectorAll(
-            "nav button"
-          )
-          .forEach(
-            b =>
-              b.classList.remove(
-                "active"
-              )
-          );
+  const container =
+    document.getElementById("knowledgePack");
 
 
-        button.classList.add(
-          "active"
-        );
+  if(!knowledgePacks.length){
+
+    container.innerHTML =
+      `<div class="empty">
+        No knowledge-transfer pack available.
+      </div>`;
+
+    return;
+
+  }
 
 
-        document
-          .querySelectorAll(
-            ".page"
-          )
-          .forEach(
-            page =>
-              page.classList.remove(
-                "active"
-              )
-          );
+  const pack =
+    knowledgePacks.find(p =>
+      !activeProject ||
+      String(p.project_id) === String(activeProject.id)
+    ) || knowledgePacks[0];
 
 
-        document
-          .getElementById(
-            button.dataset.page
-          )
-          .classList.add(
-            "active"
-          );
+  container.innerHTML = `
+
+    <h3>
+      ${escapeHtml(pack.title)}
+    </h3>
+
+    <div class="card-subtitle">
+      ${escapeHtml(pack.purpose || "")}
+    </div>
 
 
-        const titles = {
+    <h4>Key Skills</h4>
 
-          dashboard:
-            "SkillBridge Dashboard",
+    <div class="badges">
 
-          match:
-            "Project Matching Assistant",
-
-          directory:
-            "Expertise Directory",
-
-          team:
-            "Team Builder",
-
-          learning:
-            "Learning & Mentors",
-
-          governance:
-            "Responsible Use"
-
-        };
-
-
-        document.getElementById(
-          "pageTitle"
-        ).textContent =
-          titles[
-            button.dataset.page
-          ];
-
+      ${
+        (pack.key_skills || [])
+          .map(skill => `
+            <span class="badge good">
+              ${escapeHtml(skill)}
+            </span>
+          `).join("")
       }
 
-    );
+    </div>
 
-  });
+
+    <h4 style="margin-top:20px">
+      Onboarding Steps
+    </h4>
+
+    <ol>
+
+      ${
+        (pack.onboarding_steps || [])
+          .map(step =>
+            `<li style="margin-bottom:8px;font-size:13px">
+              ${escapeHtml(step)}
+            </li>`
+          ).join("")
+      }
+
+    </ol>
+
+
+    <div class="reason">
+
+      <strong>Knowledge Transfer Notes:</strong>
+
+      ${escapeHtml(pack.knowledge_transfer_notes || "")}
+
+    </div>
+
+  `;
+
+}
 
 
 /* =========================================================
-   START APPLICATION
+   SECURITY / HTML ESCAPE
+========================================================= */
+
+function escapeHtml(value){
+
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+
+/* =========================================================
+   START APP
 ========================================================= */
 
 loadData();
